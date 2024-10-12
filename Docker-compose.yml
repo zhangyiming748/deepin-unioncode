@@ -1,0 +1,20 @@
+services:
+    ubuntu-xfce-vnc:
+        container_name: xfce
+        image: imlala/ubuntu-xfce-vnc-novnc:latest
+        shm_size: "1gb"
+        ports:
+            - 5900:5900
+            - 6080:6080
+        environment:
+            - VNC_PASSWD=imlala
+            - GEOMETRY=1280x720
+            - DEPTH=24
+        volumes:
+            - ./Downloads:/root/Downloads
+            - ./Documents:/root/Documents
+            - ./Pictures:/root/Pictures
+            - ./Videos:/root/Videos
+            - ./Music:/root/Music
+            - ./swap:/root/deepin-ide
+        restart: unless-stopped

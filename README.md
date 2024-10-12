@@ -38,3 +38,7 @@ cmake --build build --target install
 ```
 
 可执行程序为 `/usr/bin/deepin-unioncode`
+
+----
+
+docker 容器安装 Ubuntu:novel 系统后 安装 vnc和novnc服务

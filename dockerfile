@@ -1,16 +1,30 @@
-FROM debian:bookworm
+# docker build -t ubuntu-vnc-novnc .
+# docker run -d -p 5901:5901 -p 5900:5900 -p 8080:8080 --name my-vnc-container ubuntu-vnc-novnc
+# 使用 Ubuntu 作为基础镜像
+FROM ubuntu:noble
 
-# 添加源
-RUN printf 'deb http://mirrors4.tuna.tsinghua.edu.cn/debian/ bookworm main contrib non-free non-free-firmware\ndeb-src http://mirrors4.tuna.tsinghua.edu.cn/debian/ bookworm main contrib non-free non-free-firmware\ndeb http://mirrors4.tuna.tsinghua.edu.cn/debian/ bookworm-updates main contrib non-free non-free-firmware\ndeb-src http://mirrors4.tuna.tsinghua.edu.cn/debian/ bookworm-updates main contrib non-free non-free-firmware\ndeb http://mirrors4.tuna.tsinghua.edu.cn/debian/ bookworm-backports main contrib non-free non-free-firmware\ndeb-src http://mirrors4.tuna.tsinghua.edu.cn/debian/ bookworm-backports main contrib non-free non-free-firmware\ndeb http://mirrors4.tuna.tsinghua.edu.cn/debian-security bookworm-security main contrib non-free non-free-firmware\ndeb-src http://mirrors4.tuna.tsinghua.edu.cn/debian-security bookworm-security main contrib non-free non-free-firmware' >> /etc/apt/sources.list
+# 特色代码
+RUN rm /etc/apt/sources.list.d/ubuntu.sources
+COPY noble.sources /etc/apt/sources.list.d
+COPY install-retry.sh /usr/local/bin
+RUN chmod +x /usr/local/bin/install-retry.sh
+# 更新包列表并安装必要的包
+RUN apt-get update
+RUN /usr/local/bin/install-retry.sh xfce4 xfce4-goodies tightvncserver websockify novnc dbus-x11 language-pack-zh-hans
+RUN apt-get clean
 
-# 更新并安装必要的软件
-RUN apt update -y && apt install -y vim xfce4 xfce4-terminal tightvncserver tightvnc-java dbus-x11
+# 设置 VNC 密码
+ENV USER=$(whoami)
+RUN mkdir -p /root/.vnc
+RUN echo "yourpassword" | vncpasswd -f > /root/.vnc/passwd
+RUN chmod 600 /root/.vnc/passwd
 
-# 暴露 VNC 端口
-EXPOSE 5900
+RUN echo -e '#!/bin/sh\n\n# 启动 xfce4\nstartxfce4 &\n# 启动 xfce4 面板\nxfce4-panel &\n' > ~/.vnc/xstartup
+RUN chmod a+x ~/.vnc/xstartup
+# 设置中文界面
+ENV LANG=zh_CN.UTF-8
+ENV LANGUAGE=zh_CN:zh
+ENV LC_ALL=zh_CN.UTF-8
 
-# 安装其他软件
-RUN apt install -y firefox-esr xfonts-intl-chinese xfonts-wqy scim scim-pinyin git build-essential
-# docker build -t vnc:1 .
-# docker run -dit --name vnc -p 5900:5900 -v /C/Users/zen/Github/deepin-unioncode/swap:/root/swap vnc:1 bash
-# docker exec -it vnc bash
+# 启动 VNC 服务器
+CMD ["sh", "-c", "vncserver :0 -geometry 1280x800 -depth 24 && tail -f /root/.vnc/*.log"]
