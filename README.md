@@ -28,7 +28,7 @@ apt build-dep ./
 
 ```shell
 cmake -B build -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release
-cmake --build build
+cmake --build build --parallel 4
 ```
 
 3. 安装:
